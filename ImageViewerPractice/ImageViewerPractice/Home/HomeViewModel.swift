@@ -72,9 +72,35 @@ class HomeViewModel: ObservableObject {
     imageOffset = value
   }
 
-  func onPanEnd(value: DragGesture.Value) {
+  func onPanEnd(value: DragGesture.Value, in viewSize: CGSize) {
     imageOffset.width += value.translation.width
     imageOffset.height += value.translation.height
+
+    // Apply boundary constraints with animation
+    withAnimation(.interpolatingSpring(stiffness: 300, damping: 30)) {
+      boundOffset(in: viewSize)
+    }
+  }
+
+  func boundOffset(in viewSize: CGSize) {
+    // Calculate the scaled image size
+    let scaledWidth = viewSize.width * imageScale
+    let scaledHeight = viewSize.height * imageScale
+
+    // Limit offset to keep image within bounds
+    if scaledWidth > viewSize.width {
+      let maxOffsetX = (scaledWidth - viewSize.width) / 2
+      imageOffset.width = max(-maxOffsetX, min(maxOffsetX, imageOffset.width))
+    } else {
+      imageOffset.width = 0
+    }
+
+    if scaledHeight > viewSize.height {
+      let maxOffsetY = (scaledHeight - viewSize.height) / 2
+      imageOffset.height = max(-maxOffsetY, min(maxOffsetY, imageOffset.height))
+    } else {
+      imageOffset.height = 0
+    }
   }
 
   func resetImageState() {
@@ -93,13 +119,35 @@ class HomeViewModel: ObservableObject {
 
   func onMagnificationEnd(value: CGFloat) {
     let newScale = baseScale * value
-    withAnimation {
-      if newScale < minZoomedScale {
-        imageScale = 1
-        baseScale = 1
-      } else {
-        imageScale = min(newScale, maxScale)  // Max scale 3
-        baseScale = imageScale
+    // Use DispatchQueue to ensure animation works in gesture callback
+    if newScale < minZoomedScale {
+      DispatchQueue.main.async { [weak self] in
+        withAnimation {
+          self?.imageScale = 1
+          self?.baseScale = 1
+          self?.imageOffset = .zero
+        }
+      }
+    } else if newScale > maxScale {
+      DispatchQueue.main.async { [weak self] in
+        withAnimation {
+          guard let maxScale = self?.maxScale,
+                let imageScale = self?.imageScale else {
+            return
+          }
+          self?.imageScale = min(newScale, maxScale)  // Max scale 3
+          self?.baseScale = imageScale
+        }
+      }
+    } else {
+      DispatchQueue.main.async { [weak self] in
+        guard let maxScale = self?.maxScale,
+              let imageScale = self?.imageScale else {
+          return
+        }
+        self?.imageScale = min(newScale, maxScale)  // Max scale 3
+        self?.baseScale = imageScale
+
       }
     }
   }
@@ -121,6 +169,9 @@ class HomeViewModel: ObservableObject {
           height: -tapOffsetY * targetScale
         )
         imageScale = targetScale
+
+        // Apply boundary constraints
+        boundOffset(in: size)
       }
     }
   }

@@ -47,7 +47,7 @@ struct ImageView: View {
                     }
                     .onEnded { value in
                       if isZoomed && isSelected {
-                        homeData.onPanEnd(value: value)
+                        homeData.onPanEnd(value: value, in: geometry.size)
                       }
                     }
                 )
