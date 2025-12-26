@@ -13,54 +13,45 @@ struct ImageView: View {
   @GestureState var draggingOffset: CGSize = .zero
   @GestureState var panOffset: CGSize = .zero
   @GestureState var magnifying: Bool = false
+  
+  private let minZoomedScale = 1.2
 
   var body: some View {
     
     ZStack {
-      // Tab View has a problem in ignoring edges..
       ScrollView(.init()) {
         TabView(selection: $homeData.selectedImageId) {
           ForEach(homeData.allImages, id: \.self) { image in
             let isSelected = homeData.selectedImageId == image
-            let isZoomed = homeData.imageScale > 1.2
+            let isZoomed = homeData.imageScale > minZoomedScale
 
-            SafeImage(url: image)
-              .aspectRatio(contentMode: .fit)
-              .tag(image)
-              .scaleEffect(isSelected ? homeData.imageScale : 1)
-              // Always apply pan offset, but only when selected
-              .offset(
-                x: isSelected ? homeData.imageOffset.width + panOffset.width : 0,
-                y: isSelected ? homeData.imageOffset.height + panOffset.height : 0
-              )
-              // Always apply gesture, but only respond when zoomed
-              .simultaneousGesture(
-                DragGesture(minimumDistance: isZoomed && isSelected ? 0 : .infinity)
-                  .updating($panOffset) { value, state, _ in
-                    if isZoomed && isSelected {
-                      state = value.translation
-                    }
-                  }
-                  .onEnded { value in
-                    if isZoomed && isSelected {
-                      homeData.onPanEnd(value: value)
-                    }
-                  },
-                including: isZoomed && isSelected ? .all : .subviews
-              )
-              .simultaneousGesture(
-                TapGesture(count: 2)
-                  .onEnded { _ in
-                    withAnimation {
-                      if homeData.imageScale > 1 {
-                        homeData.imageScale = 1
-                        homeData.imageOffset = .zero
-                      } else {
-                        homeData.imageScale = 4
+            GeometryReader { geometry in
+              SafeImage(url: image)
+                .aspectRatio(contentMode: .fit)
+                .frame(width: geometry.size.width, height: geometry.size.height)
+                .tag(image)
+                .scaleEffect(isSelected ? homeData.imageScale : 1)
+                .offset(
+                  x: isSelected ? homeData.imageOffset.width + panOffset.width : 0,
+                  y: isSelected ? homeData.imageOffset.height + panOffset.height : 0
+                )
+                .onTapGesture(count: 2, perform: { location in
+                  homeData.toggleZoom(at: location, in: geometry.size)
+                })
+                .gesture(
+                  DragGesture(minimumDistance: isZoomed && isSelected ? 0 : .infinity)
+                    .updating($panOffset) { value, state, _ in
+                      if isZoomed && isSelected {
+                        state = value.translation
                       }
                     }
-                  }
-              )
+                    .onEnded { value in
+                      if isZoomed && isSelected {
+                        homeData.onPanEnd(value: value)
+                      }
+                    }
+                )
+            }
               .gesture(
                 MagnificationGesture()
                   .updating($magnifying) { _, state, _ in

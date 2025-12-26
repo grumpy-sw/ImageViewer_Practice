@@ -23,21 +23,21 @@ class HomeViewModel: ObservableObject {
   @Published var selectedImageId: String = ""
   @Published var imageViewerOffset: CGSize = .zero
   
-  // Background Opacity
   @Published var backgroundOpacity: Double = 1.0
   
-  // Scaling
   @Published var imageScale: CGFloat = 1
   var baseScale: CGFloat = 1  // Scale at gesture start
 
-  // Image pan offset when zoomed
   @Published var imageOffset: CGSize = .zero
+  
+  private let minZoomedScale = 1.2
+  private let maxScale = 3.0
   
   func onChange(value: CGSize) {
     DispatchQueue.main.async { [weak self] in
       self?.imageViewerOffset = value
     }
-    // Change opacity
+
     let halgHeight = UIScreen.main.bounds.height / 2
     
     let progress = imageViewerOffset.height / halgHeight
@@ -73,7 +73,6 @@ class HomeViewModel: ObservableObject {
   }
 
   func onPanEnd(value: DragGesture.Value) {
-    // Accumulate the offset instead of replacing
     imageOffset.width += value.translation.width
     imageOffset.height += value.translation.height
   }
@@ -95,12 +94,33 @@ class HomeViewModel: ObservableObject {
   func onMagnificationEnd(value: CGFloat) {
     let newScale = baseScale * value
     withAnimation {
-      if newScale < 1.2 {
+      if newScale < minZoomedScale {
         imageScale = 1
         baseScale = 1
       } else {
-        imageScale = min(newScale, 4.0)  // Max scale 4
+        imageScale = min(newScale, maxScale)  // Max scale 3
         baseScale = imageScale
+      }
+    }
+  }
+
+  func toggleZoom(at location: CGPoint, in size: CGSize) {
+    withAnimation {
+      if imageScale > 1 {
+        imageScale = 1
+        imageOffset = .zero
+      } else {
+        let targetScale: CGFloat = maxScale
+        let centerX = size.width / 2
+        let centerY = size.height / 2
+        let tapOffsetX = location.x - centerX
+        let tapOffsetY = location.y - centerY
+
+        imageOffset = CGSize(
+          width: -tapOffsetX * targetScale,
+          height: -tapOffsetY * targetScale
+        )
+        imageScale = targetScale
       }
     }
   }
