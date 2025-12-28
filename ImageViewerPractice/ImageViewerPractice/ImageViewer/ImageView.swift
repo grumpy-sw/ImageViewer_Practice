@@ -39,35 +39,32 @@ struct ImageView: View {
                   homeData.toggleZoom(at: location, in: geometry.size)
                 })
                 .gesture(
-                  DragGesture(minimumDistance: isZoomed && isSelected ? 0 : .infinity)
+                  DragGesture(minimumDistance: 0)
                     .updating($panOffset) { value, state, _ in
-                      if isZoomed && isSelected {
-                        state = value.translation
-                      }
+                      state = value.translation
                     }
                     .onEnded { value in
-                      if isZoomed && isSelected {
-                        homeData.onPanEnd(value: value, in: geometry.size)
-                      }
-                    }
+                      homeData.onPanEnd(value: value, in: geometry.size)
+                    },
+                  including: isZoomed && isSelected ? .all : .none
                 )
             }
-              .gesture(
-                MagnificationGesture()
-                  .updating($magnifying) { _, state, _ in
-                    if !state {
-                      homeData.onMagnificationStart()
-                    }
-                    state = true
+            .simultaneousGesture(
+              // Use simultaneousGesture so it doesn't block 1-finger dismiss gesture
+              MagnificationGesture()
+                .updating($magnifying) { _, state, _ in
+                  if !state {
+                    homeData.onMagnificationStart()
                   }
-                  .onChanged { value in
-                    print("[SWTEST] value: \(value)")
-                    homeData.onMagnificationChange(value: value)
-                  }
-                  .onEnded { value in
-                    homeData.onMagnificationEnd(value: value)
-                  }
-              )
+                  state = true
+                }
+                .onChanged { value in
+                  homeData.onMagnificationChange(value: value)
+                }
+                .onEnded { value in
+                  homeData.onMagnificationEnd(value: value)
+                }
+            )
           }
         }
         .tabViewStyle(PageTabViewStyle(indexDisplayMode: .always))

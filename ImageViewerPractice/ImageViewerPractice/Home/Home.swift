@@ -16,50 +16,54 @@ struct Home: View {
   }
   
   var body: some View {
-    
-    ScrollView {
+    ZStack {
+      Color.white.edgesIgnoringSafeArea(.all)
       
-      HStack(alignment: .top, spacing: 15) {
-        Image("profile1")
-          .resizable()
-          .aspectRatio(contentMode: .fill)
-          .frame(width: 60, height: 60)
-          .clipShape(Circle())
+      ScrollView {
         
-        VStack(alignment: .leading, spacing: 10) {
-          (
-          Text("Se Woong Park  ")
-            .fontWeight(.bold)
-          +
-          Text("@ios")
-            .foregroundColor(.gray)
-          )
-          Text("#ios #swiftui")
-            .foregroundStyle(.blue)
+        HStack(alignment: .top, spacing: 15) {
+          Image("profile1")
+            .resizable()
+            .aspectRatio(contentMode: .fill)
+            .frame(width: 60, height: 60)
+            .clipShape(Circle())
           
-          Text("iJustine New Photos :))))")
-          
-          // Our Custom Grid of Items
-          
-          // We have only TWO columns in a row
-          // and max is FOUR grid boxes...
-          let columns = Array(repeating: GridItem(.flexible(), spacing: 15), count: 2)
-          
-          LazyVGrid(columns: columns, alignment: .leading, spacing: 10) {
-            ForEach(homeData.allImages.indices, id: \.self) { index in
-              GridImageView(index: index)
+          VStack(alignment: .leading, spacing: 10) {
+            (
+              Text("Se Woong Park  ")
+                .foregroundColor(.black)
+                .fontWeight(.bold)
+              +
+              Text("@ios")
+                .foregroundColor(.gray)
+            )
+            Text("#ios #swiftui")
+              .foregroundStyle(.blue)
+            
+            Text("iJustine New Photos :))))")
+              .foregroundColor(.black)
+
+            // Our Custom Grid of Items
+            
+            // We have only TWO columns in a row
+            // and max is FOUR grid boxes...
+            let columns = Array(repeating: GridItem(.flexible(), spacing: 15), count: 2)
+            
+            LazyVGrid(columns: columns, alignment: .leading, spacing: 10) {
+              ForEach(homeData.allImages.indices, id: \.self) { index in
+                GridImageView(index: index)
+              }
             }
+            .padding(.top)
           }
-          .padding(.top)
+          
+          
+          
         }
-
+        .padding()
+        .frame(maxWidth: .infinity, alignment: .leading)
         
-
       }
-      .padding()
-      .frame(maxWidth: .infinity, alignment: .leading)
-      
-      
     }
     .overlay {
       // Image Viewer

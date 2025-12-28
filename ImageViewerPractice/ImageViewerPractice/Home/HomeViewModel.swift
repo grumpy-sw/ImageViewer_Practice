@@ -34,23 +34,19 @@ class HomeViewModel: ObservableObject {
   private let maxScale = 3.0
   
   func onChange(value: CGSize) {
-    DispatchQueue.main.async { [weak self] in
-      self?.imageViewerOffset = value
-    }
+    // Only update vertical offset for dismiss gesture
+    
+    imageViewerOffset = CGSize(width: 0, height: value.height)
 
-    let halgHeight = UIScreen.main.bounds.height / 2
-    
-    let progress = imageViewerOffset.height / halgHeight
-    
-    withAnimation(.default) {
-      DispatchQueue.main.async { [weak self] in
-        self?.backgroundOpacity = Double(1 - (progress < 0 ? -progress : progress))
-      }
-    }
+    let halfHeight = UIScreen.main.bounds.height / 2
+    let progress = value.height / halfHeight
+
+    backgroundOpacity = Double(1 - (progress < 0 ? -progress : progress))
   }
   
   func onEnd(value: DragGesture.Value) {
     withAnimation(.easeInOut(duration: 0.25)) {
+      imageViewerOffset = .zero
       var translation = value.translation.height
 
       if translation < 0 {
@@ -58,12 +54,15 @@ class HomeViewModel: ObservableObject {
       }
 
       if translation < 250 {
-        imageViewerOffset = .zero
+//        imageViewerOffset = .zero
         backgroundOpacity = 1
       } else {
+        // close
         showImageViewer.toggle()
-        imageViewerOffset = .zero
+//        imageViewerOffset = .zero
         backgroundOpacity = 1
+        // Reset image state when closing viewer
+        resetImageState()
       }
     }
   }
@@ -107,6 +106,7 @@ class HomeViewModel: ObservableObject {
     imageScale = 1
     baseScale = 1
     imageOffset = .zero
+    imageViewerOffset = .zero
   }
 
   func onMagnificationStart() {
@@ -119,35 +119,16 @@ class HomeViewModel: ObservableObject {
 
   func onMagnificationEnd(value: CGFloat) {
     let newScale = baseScale * value
-    // Use DispatchQueue to ensure animation works in gesture callback
-    if newScale < minZoomedScale {
-      DispatchQueue.main.async { [weak self] in
-        withAnimation {
-          self?.imageScale = 1
-          self?.baseScale = 1
-          self?.imageOffset = .zero
-        }
-      }
-    } else if newScale > maxScale {
-      DispatchQueue.main.async { [weak self] in
-        withAnimation {
-          guard let maxScale = self?.maxScale,
-                let imageScale = self?.imageScale else {
-            return
-          }
-          self?.imageScale = min(newScale, maxScale)  // Max scale 3
-          self?.baseScale = imageScale
-        }
-      }
-    } else {
-      DispatchQueue.main.async { [weak self] in
-        guard let maxScale = self?.maxScale,
-              let imageScale = self?.imageScale else {
-          return
-        }
-        self?.imageScale = min(newScale, maxScale)  // Max scale 3
-        self?.baseScale = imageScale
 
+    withAnimation {
+      if newScale < minZoomedScale {
+        imageScale = 1
+        baseScale = 1
+        imageOffset = .zero
+      } else {
+        let clampedScale = min(newScale, maxScale)
+        imageScale = clampedScale
+        baseScale = clampedScale
       }
     }
   }
