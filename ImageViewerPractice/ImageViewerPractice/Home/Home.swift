@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import ImageViewerRemote
 
 struct Home: View {
   
@@ -65,15 +66,23 @@ struct Home: View {
         
       }
     }
+//    .overlay {
+//      // Image Viewer
+//      if homeData.showImageViewer {
+//        Color.black
+//          .opacity(homeData.backgroundOpacity)
+//          .ignoresSafeArea()
+//        ImageView()
+//      }
+//      
+//    }
     .overlay {
-      // Image Viewer
-      if homeData.showImageViewer {
-        Color.black
-          .opacity(homeData.backgroundOpacity)
-          .ignoresSafeArea()
-        ImageView()
-      }
       
+      ImageViewerRemote(imageURL: $homeData.selectedImageId, viewerShown: $homeData.showImageViewer)
+
+      
+      
+//      .overlay(ImageViewer(image: self.$image, viewerShown: self.$showImageViewer))
     }
     
     
