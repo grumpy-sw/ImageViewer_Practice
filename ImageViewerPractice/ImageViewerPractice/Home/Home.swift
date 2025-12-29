@@ -66,27 +66,19 @@ struct Home: View {
         
       }
     }
-//    .overlay {
-//      // Image Viewer
-//      if homeData.showImageViewer {
-//        Color.black
-//          .opacity(homeData.backgroundOpacity)
-//          .ignoresSafeArea()
-//        ImageView()
-//      }
-//      
-//    }
     .overlay {
+      // Image Viewer
+      if homeData.showImageViewer {
+        Color.black
+          .opacity(homeData.backgroundOpacity)
+          .ignoresSafeArea()
+        ImageView()
+      }
       
-      ImageViewerRemote(imageURL: $homeData.selectedImageId, viewerShown: $homeData.showImageViewer)
-
-      
-      
-//      .overlay(ImageViewer(image: self.$image, viewerShown: self.$showImageViewer))
     }
-    
-    
-    
+//    .overlay {
+//      ImageViewerRemote(imageURL: $homeData.selectedImageId, viewerShown: $homeData.showImageViewer)
+//    }
     .environmentObject(homeData)
   }
 }

@@ -34,14 +34,18 @@ class HomeViewModel: ObservableObject {
   private let maxScale = 3.0
   
   func onChange(value: CGSize) {
-    // Only update vertical offset for dismiss gesture
     
-    imageViewerOffset = CGSize(width: 0, height: value.height)
-
     let halfHeight = UIScreen.main.bounds.height / 2
     let progress = value.height / halfHeight
 
-    backgroundOpacity = Double(1 - (progress < 0 ? -progress : progress))
+    // Only update vertical offset for dismiss gesture
+
+
+    DispatchQueue.main.async { [weak self] in
+      self?.imageViewerOffset = CGSize(width: 0, height: value.height)
+      self?.backgroundOpacity = Double(1 - (progress < 0 ? -progress : progress))
+    }
+
   }
   
   func onEnd(value: DragGesture.Value) {

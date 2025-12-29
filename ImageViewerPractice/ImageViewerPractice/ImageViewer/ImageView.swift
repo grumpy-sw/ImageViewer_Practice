@@ -35,11 +35,9 @@ struct ImageView: View {
                   x: isSelected ? homeData.imageOffset.width + panOffset.width : 0,
                   y: isSelected ? homeData.imageOffset.height + panOffset.height : 0
                 )
-                .onTapGesture(count: 2, perform: { location in
-                  homeData.toggleZoom(at: location, in: geometry.size)
-                })
+                // Pan gesture only when zoomed - higher priority
                 .gesture(
-                  DragGesture(minimumDistance: 0)
+                  DragGesture(minimumDistance: 10)
                     .updating($panOffset) { value, state, _ in
                       state = value.translation
                     }
@@ -47,6 +45,13 @@ struct ImageView: View {
                       homeData.onPanEnd(value: value, in: geometry.size)
                     },
                   including: isZoomed && isSelected ? .all : .none
+                )
+                // Double tap gesture - works alongside other gestures
+                .simultaneousGesture(
+                  SpatialTapGesture(count: 2, coordinateSpace: .local)
+                    .onEnded { event in
+                      homeData.toggleZoom(at: event.location, in: geometry.size)
+                    }
                 )
             }
             .simultaneousGesture(
