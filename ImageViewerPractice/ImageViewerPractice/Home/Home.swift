@@ -9,9 +9,10 @@ import SwiftUI
 import ImageViewerRemote
 
 struct Home: View {
-  
+
   @StateObject var homeData = HomeViewModel()
-  
+  @Namespace private var imageNamespace
+
   init() {
     UIScrollView.appearance().bounces = false
   }
@@ -52,7 +53,7 @@ struct Home: View {
             
             LazyVGrid(columns: columns, alignment: .leading, spacing: 10) {
               ForEach(homeData.allImages.indices, id: \.self) { index in
-                GridImageView(index: index)
+                GridImageView(index: index, namespace: imageNamespace)
               }
             }
             .padding(.top)
@@ -69,12 +70,15 @@ struct Home: View {
     .overlay {
       // Image Viewer
       if homeData.showImageViewer {
-        Color.black
-          .opacity(homeData.backgroundOpacity)
-          .ignoresSafeArea()
-        ImageView()
+        ImageCardViewer(
+          card: $homeData.selectedCard,
+          isPresented: $homeData.showImageViewer,
+          namespace: imageNamespace,
+          initialIndex: homeData.selectedImageIndex,
+          resetZoomOnPageChange: true
+        )
       }
-      
+
     }
 //    .overlay {
 //      ImageViewerRemote(imageURL: $homeData.selectedImageId, viewerShown: $homeData.showImageViewer)

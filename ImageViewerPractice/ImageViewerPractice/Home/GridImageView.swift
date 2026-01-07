@@ -8,21 +8,23 @@
 import SwiftUI
 
 struct GridImageView: View {
-  
+
   @EnvironmentObject var homeData: HomeViewModel
   var index: Int
+  var namespace: Namespace.ID
   
   var body: some View {
     Button {
       withAnimation(.easeInOut) {
-        homeData.selectedImageId = homeData.allImages[index]
-        homeData.showImageViewer.toggle()
+        homeData.selectedCard = homeData.createImageCard(startingAt: index)
+        homeData.showImageViewer = true
       }
     } label: {
       ZStack {
         
         if index <= 3 {
           SafeImage(url: homeData.allImages[index])
+            .matchedGeometryEffect(id: "image-\(index)", in: namespace)
             .aspectRatio(contentMode: .fill)
             .frame(width: getWidth(index: index), height: 120)
             .cornerRadius(12)
